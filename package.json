@@ -1,0 +1,20 @@
+{
+  "name": "agenda-eletronica",
+  "version": "1.0.0",
+  "description": "Agenda Eletronica com node.js e mongodb",
+  "homepage": "https://github.com/JoseWynder/agenda-eletronica#readme",
+  "bugs": {
+    "url": "https://github.com/JoseWynder/agenda-eletronica/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoseWynder/agenda-eletronica.git"
+  },
+  "license": "ISC",
+  "author": "José Wynder",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
