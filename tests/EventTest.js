@@ -6,9 +6,18 @@ const EventRepository = require('../repositories/EventRepository');
 const EventService = require('../services/EventService');
 
 module.exports = async function runEventTest() {
-  const userService = new UserService(new UserRepository());
-  const calendarService = new CalendarService(new CalendarRepository());
-  const eventService = new EventService(new EventRepository());
+  const userRepository = new UserRepository();
+  const calendarRepository = new CalendarRepository();
+  const eventRepository = new EventRepository();
+  const userService = new UserService(userRepository);
+  const calendarService = new CalendarService(
+    calendarRepository,
+    userRepository
+  );
+  const eventService = new EventService(
+    eventRepository,
+    calendarRepository
+  );
 
   console.log('\nEVENT TEST');
 
@@ -108,6 +117,16 @@ module.exports = async function runEventTest() {
   );
 
   await expectError(
+    () => eventService.createEvent({
+      title: 'Calendario inexistente',
+      startTime: '2026-05-01T14:00:00',
+      endTime: '2026-05-01T15:00:00',
+      calendarId: '507f1f77bcf86cd799439011'
+    }),
+    'CalendarId inexistente'
+  );
+
+  await expectError(
     () => eventService.updateEvent(secondEvent.insertedId, {
       startTime: '2026-05-01T08:30:00',
       endTime: '2026-05-01T09:30:00'
@@ -122,6 +141,25 @@ module.exports = async function runEventTest() {
       endTime: '2026-05-01T19:00:00'
     }),
     'Evento inexistente'
+  );
+
+  await expectError(
+    () => eventService.getEventsByCalendar('id-invalido'),
+    'CalendarId invalido'
+  );
+
+  await expectError(
+    () => eventService.updateEvent('id-invalido', {
+      title: 'Formato invalido',
+      startTime: '2026-05-01T18:00:00',
+      endTime: '2026-05-01T19:00:00'
+    }),
+    'Id invalido no update'
+  );
+
+  await expectError(
+    () => eventService.deleteEvent('id-invalido'),
+    'Id invalido no delete'
   );
 };
 

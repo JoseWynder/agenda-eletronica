@@ -2,8 +2,9 @@ const { ObjectId } = require('mongodb');
 const { logError } = require('../utils/logger');
 
 class EventService {
-  constructor(eventRepository) {
+  constructor(eventRepository, calendarRepository) {
     this.eventRepository = eventRepository;
+    this.calendarRepository = calendarRepository;
   }
 
   validate(data) {
@@ -44,6 +45,16 @@ class EventService {
   async createEvent(data) {
     try {
       this.validate(data);
+
+      if (!ObjectId.isValid(data.calendarId)) {
+        throw new Error('calendarId invalido');
+      }
+
+      const calendar = await this.calendarRepository.findById(data.calendarId);
+
+      if (!calendar) {
+        throw new Error('Calendario nao encontrado');
+      }
 
       const startTime = new Date(data.startTime);
       const endTime = new Date(data.endTime);

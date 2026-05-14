@@ -25,6 +25,10 @@ class UserRepository {
     return await this.collection.findOne({ email });
   }
 
+  async findById(id) {
+    return await this.collection.findOne({ _id: new ObjectId(id) });
+  }
+
   async deleteByEmail(email) {
     return await this.collection.deleteOne({ email });
   }

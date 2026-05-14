@@ -4,8 +4,13 @@ const CalendarRepository = require('../repositories/CalendarRepository');
 const CalendarService = require('../services/CalendarService');
 
 module.exports = async function runCalendarTest() {
-  const userService = new UserService(new UserRepository());
-  const calendarService = new CalendarService(new CalendarRepository());
+  const userRepository = new UserRepository();
+  const calendarRepository = new CalendarRepository();
+  const userService = new UserService(userRepository);
+  const calendarService = new CalendarService(
+    calendarRepository,
+    userRepository
+  );
 
   console.log('\nCALENDAR TEST');
 
@@ -44,6 +49,14 @@ module.exports = async function runCalendarTest() {
       userId: createdUser.insertedId
     }),
     'Nome duplicado para o mesmo usuario'
+  );
+
+  await expectError(
+    () => calendarService.createCalendar({
+      name: 'Usuario inexistente',
+      userId: '507f1f77bcf86cd799439011'
+    }),
+    'UserId inexistente'
   );
 
   await expectError(

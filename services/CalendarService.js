@@ -2,8 +2,9 @@ const { ObjectId } = require('mongodb');
 const { logError } = require('../utils/logger');
 
 class CalendarService {
-  constructor(calendarRepository) {
+  constructor(calendarRepository, userRepository) {
     this.calendarRepository = calendarRepository;
+    this.userRepository = userRepository;
   }
 
   validate(data) {
@@ -19,6 +20,16 @@ class CalendarService {
   async createCalendar(data) {
     try {
       this.validate(data);
+
+      if (!ObjectId.isValid(data.userId)) {
+        throw new Error('userId inválido');
+      }
+
+      const user = await this.userRepository.findById(data.userId);
+
+      if (!user) {
+        throw new Error('Usuário não encontrado');
+      }
 
       const exists = await this.calendarRepository.nameExists(
         data.name,
@@ -36,7 +47,6 @@ class CalendarService {
       };
 
       return await this.calendarRepository.create(calendar);
-
     } catch (error) {
       logError(error, 'CalendarService.createCalendar');
       throw error;
@@ -74,7 +84,6 @@ class CalendarService {
       }
 
       return await this.calendarRepository.updateById(id, data);
-
     } catch (error) {
       logError(error, 'CalendarService.updateCalendar');
       throw error;
