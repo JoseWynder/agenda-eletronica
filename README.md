@@ -133,9 +133,9 @@ A API utiliza sessão para identificar usuários autenticados.
 
 ### Login
 
-```http
-POST /auth/login
-```
+| Método | Rota        |
+| ------ | ----------- |
+| POST   | /auth/login |
 
 ```json
 {
@@ -144,17 +144,17 @@ POST /auth/login
 }
 ```
 
-### Logout
-
-```http
-POST /auth/logout
-```
-
 ### Sessão Atual
 
-```http
-GET /auth/session
-```
+| Método | Rota          |
+| ------ | ------------- |
+| GET    | /auth/session |
+
+### Logout
+
+| Método | Rota         |
+| ------ | ------------ |
+| POST   | /auth/logout |
 
 ---
 
@@ -168,6 +168,8 @@ GET /auth/session
 
 Retorna informações básicas da API e o estado da sessão atual.
 
+#
+
 ### Usuários
 
 | Método | Rota       |
@@ -177,6 +179,18 @@ Retorna informações básicas da API e o estado da sessão atual.
 | GET    | /users/:id |
 | PUT    | /users/:id |
 | DELETE | /users/:id |
+
+#### Exemplo de cadastro
+
+```json
+{
+  "name": "Jose",
+  "email": "jose@email.com",
+  "password": "123456"
+}
+```
+
+#
 
 ### Calendários
 
@@ -188,15 +202,48 @@ Retorna informações básicas da API e o estado da sessão atual.
 | PUT    | /calendars/:id |
 | DELETE | /calendars/:id |
 
+#### Exemplo de cadastro
+
+```json
+{
+  "name": "Pessoal"
+}
+```
+
+Observação:
+
+* o `userId` é obtido automaticamente da sessão autenticada;
+* o retorno do cadastro contém o identificador do calendário criado.
+
+#
+
 ### Eventos
 
 | Método | Rota                         |
 | ------ | ---------------------------- |
 | POST   | /events                      |
+| GET    | /events/calendar/:calendarId |
 | GET    | /events/:id                  |
 | PUT    | /events/:id                  |
 | DELETE | /events/:id                  |
-| GET    | /events/calendar/:calendarId |
+
+#### Exemplo de cadastro
+
+```json
+{
+  "title": "Reunião",
+  "description": "Reunião de alinhamento",
+  "startTime": "2026-06-04T10:00:00.000Z",
+  "endTime": "2026-06-04T11:00:00.000Z",
+  "calendarId": "..."
+}
+```
+
+Observação:
+
+* o `calendarId` deve ser o identificador retornado ao criar um calendário;
+* eventos com horários conflitantes no mesmo calendário não são permitidos.
+
 
 ---
 
@@ -217,8 +264,7 @@ O sistema realiza:
 * validação de campos obrigatórios;
 * validação de IDs;
 * validação de regras de negócio;
-* tratamento de exceções do MongoDB;
-* mensagens amigáveis para o cliente.
+* tratamento de exceções do MongoDB.
 
 As exceções capturadas são registradas em:
 
