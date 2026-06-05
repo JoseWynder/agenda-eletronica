@@ -1,105 +1,268 @@
 # Agenda Eletrônica
 
-Projeto desenvolvido para a disciplina de Programação Web Back-End utilizando Node.js e MongoDB. A proposta é implementar uma biblioteca de acesso a dados para o domínio de agenda eletrônica, com foco no cadastro, consulta e validação de usuários, calendários e eventos.
+Projeto desenvolvido para a disciplina de Programação Web Back-End.
 
-## Estrutura do Projeto
+A aplicação implementa uma agenda eletrônica com gerenciamento de usuários, calendários e eventos. O repositório reúne as entregas do Projeto 1 e Projeto 2 da disciplina, evoluindo de uma biblioteca de domímio para uma API REST que utiliza Express.js, autenticação por sessão e operações CRUD para usuários, calendários e eventos.
 
-O projeto foi organizado em camadas simples, separando responsabilidades:
+---
 
-* `models`: representa as entidades principais do domínio
-* `repositories`: concentra o acesso direto ao MongoDB
-* `services`: aplica validações e regras de negócio
-* `database.js`: responsável pela conexão com o banco
-* `index.js`: ponto de entrada principal do projeto
-* `tests`: contém os testes manuais para validação dos fluxos
-* `utils/logger.js`: registra exceções capturadas em arquivo
+## Objetivos do Projeto
+
+### Projeto 1
+
+Implementação de uma biblioteca em Node.js para:
+
+* acesso ao MongoDB;
+* persistência de entidades do domínio;
+* validação de regras de negócio;
+* tratamento de exceções;
+* registro de logs.
+
+### Projeto 2
+
+Evolução da solução para uma aplicação Web utilizando Express.js, adicionando:
+
+* rotas HTTP;
+* autenticação de usuários;
+* controle de sessão;
+* respostas em JSON;
+* operações CRUD através da API.
+
+---
+
+## Arquitetura da Aplicação
+
+A aplicação segue uma separação em camadas.
+
+As requisições HTTP são recebidas pelas rotas e encaminhadas para os controllers. Os controllers utilizam os services para aplicar regras de negócio e validações. Os services acessam os repositories, responsáveis pela comunicação com o MongoDB.
+
+```text
+.
+├── controllers
+├── logs
+├── middlewares
+├── models
+├── repositories
+├── routes
+├── services
+├── tests
+├── utils
+├── app.js
+├── database.js
+└── index.js
+```
+
+### Responsabilidades
+
+| Diretório    | Responsabilidade                         |
+| ------------ | ---------------------------------------- |
+| models       | Entidades do domínio                     |
+| repositories | Persistência e consultas no MongoDB      |
+| services     | Regras de negócio e validações           |
+| controllers  | Tratamento das requisições HTTP          |
+| routes       | Definição dos endpoints da API           |
+| middlewares  | Autenticação e validações compartilhadas |
+| utils        | Funções auxiliares e logging             |
+| tests        | Testes manuais dos fluxos principais     |
+
+---
 
 ## Tecnologias Utilizadas
 
 * JavaScript
 * Node.js
+* Express.js
 * MongoDB
-* Banco local em `mongodb://localhost:27017/mongo-test`
+* Express Session
 
-## Modelos e Regras de Negócio
+---
+
+## Modelo de Domínio
 
 ### User
 
 Campos:
 
-* `name`
-* `email`
+* name
+* email
+* password
 
-Regras:
+Validações:
 
-* `name` é obrigatório
-* `email` é obrigatório
-* `email` deve estar em formato válido
-* não é permitido cadastrar dois usuários com o mesmo email
-* no update, se `name` ou `email` forem informados, eles também passam por validação
+* nome obrigatório;
+* email obrigatório e válido;
+* senha obrigatória;
+* email único.
 
 ### Calendar
 
 Campos:
 
-* `name`
-* `userId`
+* name
+* userId
 
-Regras:
+Validações:
 
-* `name` é obrigatório
-* `userId` é obrigatório
-* cada calendário deve estar associado a um usuário
-* um mesmo usuário não pode ter dois calendários com o mesmo nome
-* no update, o sistema também valida nome vazio e tentativa de atualização de calendário inexistente
+* nome obrigatório;
+* usuário obrigatório;
+* não permite calendários com o mesmo nome para um mesmo usuário.
 
 ### Event
 
 Campos:
 
-* `title`
-* `description`
-* `startTime`
-* `endTime`
-* `calendarId`
+* title
+* description
+* startTime
+* endTime
+* calendarId
 
-Regras:
+Validações:
 
-* `title` é obrigatório
-* `startTime` e `endTime` são obrigatórios
-* `calendarId` é obrigatório
-* `description` é opcional
-* quando `description` for informada, ela não pode ser vazia
-* `startTime` e `endTime` devem ser datas válidas
-* a data de início deve ser menor que a data de fim
-* não é permitido conflito de horário entre eventos do mesmo calendário
-* no update, o evento é validado novamente antes de ser persistido
+* título obrigatório;
+* datas obrigatórias e válidas;
+* data inicial menor que data final;
+* calendário obrigatório;
+* não permite conflito de horário entre eventos do mesmo calendário.
+
+---
+
+## Autenticação
+
+A API utiliza sessão para identificar usuários autenticados.
+
+### Login
+
+```http
+POST /auth/login
+```
+
+```json
+{
+  "email": "jose@email.com",
+  "password": "123456"
+}
+```
+
+### Logout
+
+```http
+POST /auth/logout
+```
+
+### Sessão Atual
+
+```http
+GET /auth/session
+```
+
+---
+
+## Endpoints
+
+### Base
+
+| Método | Rota |
+| ------ | ---- |
+| GET    | /    |
+
+Retorna informações básicas da API e o estado da sessão atual.
+
+### Usuários
+
+| Método | Rota       |
+| ------ | ---------- |
+| POST   | /users     |
+| GET    | /users     |
+| GET    | /users/:id |
+| PUT    | /users/:id |
+| DELETE | /users/:id |
+
+### Calendários
+
+| Método | Rota           |
+| ------ | -------------- |
+| POST   | /calendars     |
+| GET    | /calendars     |
+| GET    | /calendars/:id |
+| PUT    | /calendars/:id |
+| DELETE | /calendars/:id |
+
+### Eventos
+
+| Método | Rota                         |
+| ------ | ---------------------------- |
+| POST   | /events                      |
+| GET    | /events/:id                  |
+| PUT    | /events/:id                  |
+| DELETE | /events/:id                  |
+| GET    | /events/calendar/:calendarId |
+
+---
+
+## Fluxo de Utilização
+
+1. Criar um usuário.
+2. Realizar login.
+3. Criar um calendário.
+4. Utilizar o `calendarId` retornado para criar eventos.
+5. Consultar, atualizar ou remover registros conforme necessário.
+
+---
 
 ## Tratamento de Erros
 
-As exceções capturadas durante a execução são registradas em `logs/error.log`. O arquivo de log armazena:
+O sistema realiza:
 
-* contexto da execução
-* mensagem do erro
-* stack trace
+* validação de campos obrigatórios;
+* validação de IDs;
+* validação de regras de negócio;
+* tratamento de exceções do MongoDB;
+* mensagens amigáveis para o cliente.
 
-## Testes
+As exceções capturadas são registradas em:
 
-Os testes são manuais e validam os principais fluxos de usuário, calendário e evento, incluindo:
-
-* operações de criação e atualização
-* validação de campos obrigatórios
-* duplicidade de email e de nome de calendário
-* datas e descrições inválidas
-* conflito de horários
-* atualização de registros inexistentes
-
-Antes da execução, o banco é limpo, e as exceções são registradas em log.
+```text
+logs/error.log
+```
 
 ## Execução
 
-Comandos:
+Instalação das dependências:
 
-* `node index.js`: inicializa o projeto e valida a conexão com o banco
-* `node tests/run-tests.js`: executa os testes manuais
-* `npm test`: executa o mesmo runner manual de testes
+```bash
+npm install
+```
+
+Inicialização da aplicação:
+
+```bash
+npm start
+```
+
+Servidor:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## Testes
+
+Execução dos testes manuais:
+
+```bash
+npm test
+```
+
+Os testes cobrem:
+
+* autenticação;
+* CRUD de usuários;
+* CRUD de calendários;
+* CRUD de eventos;
+* validações;
+* conflitos de horário;
+* persistência e tratamento de erros.
+
