@@ -15,9 +15,12 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "node tests/run-tests.js"
   },
   "dependencies": {
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "mongodb": "^7.2.0"
   }
 }
