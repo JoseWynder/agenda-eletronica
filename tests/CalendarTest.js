@@ -16,31 +16,32 @@ module.exports = async function runCalendarTest() {
 
   const createdUser = await userService.createUser({
     name: 'Maria',
-    email: 'maria@email.com'
+    email: 'maria@email.com',
+    password: '123456'
   });
 
   const createdCalendar = await calendarService.createCalendar({
     name: 'Pessoal',
     userId: createdUser.insertedId
   });
-  console.log('Calendario criado:', createdCalendar.insertedId.toString());
+  console.log('Calendário criado:', createdCalendar.insertedId.toString());
 
   const calendars = await calendarService.getCalendarsByUser(createdUser.insertedId);
-  console.log('Quantidade de calendarios do usuario:', calendars.length);
+  console.log('Quantidade de calendários do usuário:', calendars.length);
 
   await calendarService.updateCalendar(createdCalendar.insertedId, {
     name: 'Pessoal Atualizado'
   });
-  console.log('Calendario atualizado com sucesso');
+  console.log('Calendário atualizado com sucesso');
 
   await expectError(
     () => calendarService.createCalendar({ name: '', userId: createdUser.insertedId }),
-    'Nome obrigatorio'
+    'Campo "name" obrigatório'
   );
 
   await expectError(
     () => calendarService.createCalendar({ name: 'Sem usuario' }),
-    'UserId obrigatorio'
+    'Campo "userId" obrigatório'
   );
 
   await expectError(
@@ -48,7 +49,7 @@ module.exports = async function runCalendarTest() {
       name: 'Pessoal Atualizado',
       userId: createdUser.insertedId
     }),
-    'Nome duplicado para o mesmo usuario'
+    'Campo "name" duplicado para o mesmo usuário'
   );
 
   await expectError(
@@ -56,12 +57,12 @@ module.exports = async function runCalendarTest() {
       name: 'Usuario inexistente',
       userId: '507f1f77bcf86cd799439011'
     }),
-    'UserId inexistente'
+    'Campo "userId" inexistente'
   );
 
   await expectError(
     () => calendarService.updateCalendar('507f1f77bcf86cd799439011', { name: 'Inexistente' }),
-    'Calendario inexistente'
+    'Calendário inexistente'
   );
 };
 

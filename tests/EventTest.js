@@ -23,7 +23,8 @@ module.exports = async function runEventTest() {
 
   const createdUser = await userService.createUser({
     name: 'Carlos',
-    email: 'carlos@email.com'
+    email: 'carlos@email.com',
+    password: '123456'
   });
 
   const createdCalendar = await calendarService.createCalendar({
@@ -64,7 +65,7 @@ module.exports = async function runEventTest() {
       endTime: '2026-05-01T15:00:00',
       calendarId: createdCalendar.insertedId
     }),
-    'Titulo obrigatorio'
+    'Campo "title" obrigatório'
   );
 
   await expectError(
@@ -72,7 +73,7 @@ module.exports = async function runEventTest() {
       title: 'Sem datas',
       calendarId: createdCalendar.insertedId
     }),
-    'Datas obrigatorias'
+    'Campos "startTime" e "endTime" obrigatórios'
   );
 
   await expectError(
@@ -82,7 +83,7 @@ module.exports = async function runEventTest() {
       endTime: '2026-05-01T15:00:00',
       calendarId: createdCalendar.insertedId
     }),
-    'Data invalida'
+    'Campos "startTime" e "endTime" inválidos'
   );
 
   await expectError(
@@ -92,7 +93,7 @@ module.exports = async function runEventTest() {
       endTime: '2026-05-01T15:00:00',
       calendarId: createdCalendar.insertedId
     }),
-    'Ordem de datas'
+    'Ordem de datas inválida'
   );
 
   await expectError(
@@ -103,7 +104,7 @@ module.exports = async function runEventTest() {
       endTime: '2026-05-01T15:00:00',
       calendarId: createdCalendar.insertedId
     }),
-    'Descricao vazia'
+    'Campo "description" vazio'
   );
 
   await expectError(
@@ -113,7 +114,7 @@ module.exports = async function runEventTest() {
       endTime: '2026-05-01T13:30:00',
       calendarId: createdCalendar.insertedId
     }),
-    'Conflito de horario'
+    'Conflito de horário'
   );
 
   await expectError(
@@ -123,7 +124,7 @@ module.exports = async function runEventTest() {
       endTime: '2026-05-01T15:00:00',
       calendarId: '507f1f77bcf86cd799439011'
     }),
-    'CalendarId inexistente'
+    'Campo "calendarId" inexistente'
   );
 
   await expectError(
@@ -145,7 +146,7 @@ module.exports = async function runEventTest() {
 
   await expectError(
     () => eventService.getEventsByCalendar('id-invalido'),
-    'CalendarId invalido'
+    'Campo "calendarId" inválido'
   );
 
   await expectError(
@@ -154,12 +155,12 @@ module.exports = async function runEventTest() {
       startTime: '2026-05-01T18:00:00',
       endTime: '2026-05-01T19:00:00'
     }),
-    'Id invalido no update'
+    'Campo "id" inválido no update'
   );
 
   await expectError(
     () => eventService.deleteEvent('id-invalido'),
-    'Id invalido no delete'
+    'Campo "id" inválido no delete'
   );
 };
 

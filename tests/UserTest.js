@@ -8,37 +8,41 @@ module.exports = async function runUserTest() {
 
   const createdUser = await userService.createUser({
     name: 'Jose',
-    email: 'jose@email.com'
+    email: 'jose@email.com',
+    password: '123456'
   });
-  console.log('Usuario criado:', createdUser.insertedId.toString());
+  console.log('Usuário criado:', createdUser.insertedId.toString());
 
   const user = await userService.getUserByEmail('jose@email.com');
-  console.log('Usuario encontrado:', user.email);
+  console.log('Usuário encontrado:', user.email);
 
   await userService.updateUser(createdUser.insertedId, {
     name: 'Jose Atualizado'
   });
-  console.log('Usuario atualizado com sucesso');
+  console.log('Usuário atualizado com sucesso');
 
   await expectError(
-    () => userService.createUser({ name: '', email: 'vazio@email.com' }),
-    'Nome obrigatorio'
+    () => userService.createUser({ name: '', email: 'vazio@email.com', password: '123456' }),
+    'Campo "name" obrigatório'
   );
 
   await expectError(
-    () => userService.createUser({ name: 'Sem email', email: '' }),
-    'Email obrigatorio'
+    () => userService.createUser({ name: 'Sem email', email: '', password: '123456' }),
+    'Campo "email" obrigatório'
   );
 
   await expectError(
-    () => userService.createUser({ name: 'Email invalido', email: 'email-invalido' }),
-    'Email invalido'
+    () => userService.createUser({ name: 'Email invalido', email: 'email-invalido', password: '123456' }),
+    'Campo "email" inválido'
   );
 
   await expectError(
-    () => userService.createUser({ name: 'Duplicado', email: 'jose@email.com' }),
-    'Email duplicado'
+    () => userService.createUser({ name: 'Duplicado', email: 'jose@email.com', password: '123456' }),
+    'Campo "email" duplicado'
   );
+
+  const authUser = await userService.authenticate('jose@email.com', '123456');
+  console.log('Autenticação ok:', authUser.email);
 };
 
 async function expectError(action, label) {
