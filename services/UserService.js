@@ -10,36 +10,51 @@ class UserService {
     return emailRegex.test(email);
   }
 
-  validate(user) {
+  validate(user, options = {}) {
+    const requirePassword = options.requirePassword !== false;
+
     if (!user.name || user.name.trim() === '') {
-      throw new Error('Nome é obrigatório');
+      throw new Error('Campo "name" é obrigatório');
     }
 
     if (!user.email || user.email.trim() === '') {
-      throw new Error('Email é obrigatório');
+      throw new Error('Campo "email" é obrigatório');
     }
 
     if (!this.isValidEmail(user.email)) {
-      throw new Error('Email inválido');
+      throw new Error('Campo "email" é inválido');
+    }
+
+    if (requirePassword) {
+      if (!user.password || user.password.trim() === '') {
+        throw new Error('Campo "password" é obrigatório');
+      }
     }
   }
 
   async createUser(data) {
     try {
-      this.validate(data);
+      const userData = {
+        ...data,
+        name: data.name ? data.name.trim() : data.name,
+        email: data.email ? data.email.trim() : data.email
+      };
 
-      const exists = await this.userRepository.emailExists(data.email);
+      this.validate(userData);
+
+      const exists = await this.userRepository.emailExists(userData.email);
       if (exists) {
-        throw new Error('Email já cadastrado');
+        throw new Error('Campo "email" já cadastrado');
       }
 
       const user = {
-        ...data,
+        name: userData.name,
+        email: userData.email,
+        password: data.password,
         createdAt: new Date()
       };
 
       return await this.userRepository.create(user);
-
     } catch (error) {
       logError(error, 'UserService.createUser');
       throw error;
@@ -48,27 +63,54 @@ class UserService {
 
   async updateUser(id, data) {
     try {
+      const current = await this.userRepository.findById(id);
+
+      if (!current) {
+        throw new Error('Usuário não encontrado');
+      }
+
       if (data.name !== undefined && data.name.trim() === '') {
-        throw new Error('Nome é obrigatório');
+        throw new Error('Campo "name" é obrigatório');
       }
 
       if (data.email !== undefined) {
-        if (data.email.trim() === '') {
-          throw new Error('Email é obrigatório');
+        const email = data.email.trim();
+
+        if (email === '') {
+          throw new Error('Campo "email" é obrigatório');
         }
 
-        if (!this.isValidEmail(data.email)) {
-          throw new Error('Email inválido');
+        if (!this.isValidEmail(email)) {
+          throw new Error('Campo "email" é inválido');
         }
 
-        const exists = await this.userRepository.emailExists(data.email, id);
+        const exists = await this.userRepository.emailExists(email, id);
         if (exists) {
-          throw new Error('Email já cadastrado');
+          throw new Error('Campo "email" já cadastrado');
         }
+
+        data.email = email;
       }
 
-      return await this.userRepository.updateById(id, data);
+      if (data.password !== undefined && data.password.trim() === '') {
+        throw new Error('Campo "password" é obrigatório');
+      }
 
+      const updateData = {};
+
+      if (data.name !== undefined) {
+        updateData.name = data.name.trim();
+      }
+
+      if (data.email !== undefined) {
+        updateData.email = data.email.trim();
+      }
+
+      if (data.password !== undefined) {
+        updateData.password = data.password;
+      }
+
+      return await this.userRepository.updateById(id, updateData);
     } catch (error) {
       logError(error, 'UserService.updateUser');
       throw error;
@@ -93,6 +135,15 @@ class UserService {
     }
   }
 
+  async getUserById(id) {
+    try {
+      return await this.userRepository.findById(id);
+    } catch (error) {
+      logError(error, 'UserService.getUserById');
+      throw error;
+    }
+  }
+
   async deleteUserByEmail(email) {
     try {
       return await this.userRepository.deleteByEmail(email);
@@ -104,9 +155,30 @@ class UserService {
 
   async deleteUserById(id) {
     try {
+      const current = await this.userRepository.findById(id);
+
+      if (!current) {
+        throw new Error('Usuário não encontrado');
+      }
+
       return await this.userRepository.deleteById(id);
     } catch (error) {
       logError(error, 'UserService.deleteUserById');
+      throw error;
+    }
+  }
+
+  async authenticate(email, password) {
+    try {
+      const user = await this.userRepository.findByEmail(email.trim());
+
+      if (!user || user.password !== password) {
+        return null;
+      }
+
+      return user;
+    } catch (error) {
+      logError(error, 'UserService.authenticate');
       throw error;
     }
   }

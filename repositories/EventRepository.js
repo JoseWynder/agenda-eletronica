@@ -1,5 +1,5 @@
 const { getDB } = require('../database');
-const { ObjectId } = require('mongodb');
+const { assertObjectId } = require('../utils/objectId');
 
 class EventRepository {
   constructor() {
@@ -11,59 +11,42 @@ class EventRepository {
   }
 
   async findById(id) {
-    this.validateObjectId(id);
-
     return await this.collection.findOne({
-      _id: new ObjectId(id)
+      _id: assertObjectId(id, 'id')
     });
   }
 
   async updateById(id, data) {
-    this.validateObjectId(id);
-
     return await this.collection.updateOne(
-      { _id: new ObjectId(id) },
+      { _id: assertObjectId(id, 'id') },
       { $set: data }
     );
   }
 
   async findByCalendarId(calendarId) {
-    this.validateObjectId(calendarId);
-
     return await this.collection
-      .find({ calendarId: new ObjectId(calendarId) })
+      .find({ calendarId: assertObjectId(calendarId, 'calendarId') })
       .toArray();
   }
 
   async deleteById(id) {
-    this.validateObjectId(id);
-
     return await this.collection
-      .deleteOne({ _id: new ObjectId(id) });
+      .deleteOne({ _id: assertObjectId(id, 'id') });
   }
 
   async hasConflict(calendarId, startTime, endTime, excludeId = null) {
-    this.validateObjectId(calendarId);
-
     const query = {
-      calendarId: new ObjectId(calendarId),
+      calendarId: assertObjectId(calendarId, 'calendarId'),
       startTime: { $lt: endTime },
       endTime: { $gt: startTime }
     };
 
     if (excludeId) {
-      this.validateObjectId(excludeId);
-      query._id = { $ne: new ObjectId(excludeId) };
+      query._id = { $ne: assertObjectId(excludeId, 'id') };
     }
 
     const conflict = await this.collection.findOne(query);
     return !!conflict;
-  }
-
-  validateObjectId(id) {
-    if (!ObjectId.isValid(id)) {
-      throw new Error('ID invalido');
-    }
   }
 }
 

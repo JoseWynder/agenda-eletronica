@@ -9,36 +9,36 @@ class EventService {
 
   validate(data) {
     if (!data.title || data.title.trim() === '') {
-      throw new Error('Titulo e obrigatorio');
+      throw new Error('Campo "title" é obrigatório');
     }
 
     if (data.description !== undefined && data.description !== null) {
       if (typeof data.description !== 'string') {
-        throw new Error('Descricao deve ser uma string');
+        throw new Error('Campo "description" deve ser uma string');
       }
 
       if (data.description.trim() === '') {
-        throw new Error('Descricao nao pode ser vazia');
+        throw new Error('Campo "description" não pode ser vazio');
       }
     }
 
     if (!data.startTime || !data.endTime) {
-      throw new Error('Datas sao obrigatorias');
+      throw new Error('Campos "startTime" e "endTime" são obrigatórios');
     }
 
     const startTime = new Date(data.startTime);
     const endTime = new Date(data.endTime);
 
     if (isNaN(startTime) || isNaN(endTime)) {
-      throw new Error('Data invalida');
+      throw new Error('Campos "startTime" e "endTime" devem ser datas válidas');
     }
 
     if (startTime >= endTime) {
-      throw new Error('Data de inicio deve ser menor que a de fim');
+      throw new Error('O campo "startTime" deve ser menor que "endTime"');
     }
 
     if (!data.calendarId) {
-      throw new Error('calendarId e obrigatorio');
+      throw new Error('Campo "calendarId" é obrigatório');
     }
   }
 
@@ -47,13 +47,13 @@ class EventService {
       this.validate(data);
 
       if (!ObjectId.isValid(data.calendarId)) {
-        throw new Error('calendarId invalido');
+        throw new Error('Campo "calendarId" é inválido');
       }
 
       const calendar = await this.calendarRepository.findById(data.calendarId);
 
       if (!calendar) {
-        throw new Error('Calendario nao encontrado');
+        throw new Error('Calendário não encontrado');
       }
 
       const startTime = new Date(data.startTime);
@@ -66,11 +66,11 @@ class EventService {
       );
 
       if (conflict) {
-        throw new Error('Conflito de horario detectado');
+        throw new Error('Conflito de horário detectado');
       }
 
       const event = {
-        title: data.title,
+        title: data.title.trim(),
         description: data.description || null,
         startTime,
         endTime,
@@ -93,36 +93,58 @@ class EventService {
       const existing = await this.eventRepository.findById(id);
 
       if (!existing) {
-        throw new Error('Evento nao encontrado');
+        throw new Error('Evento não encontrado');
       }
 
       const updatedEvent = {
-        ...existing,
-        ...data
+        title: data.title !== undefined ? data.title : existing.title,
+        description:
+          data.description !== undefined ? data.description : existing.description,
+        startTime: data.startTime !== undefined ? data.startTime : existing.startTime,
+        endTime: data.endTime !== undefined ? data.endTime : existing.endTime,
+        calendarId:
+          data.calendarId !== undefined ? data.calendarId : existing.calendarId
       };
 
       this.validate(updatedEvent);
 
       const startTime = new Date(updatedEvent.startTime);
       const endTime = new Date(updatedEvent.endTime);
+      const calendarId = updatedEvent.calendarId.toString();
 
       const conflict = await this.eventRepository.hasConflict(
-        existing.calendarId,
+        calendarId,
         startTime,
         endTime,
         id
       );
 
       if (conflict) {
-        throw new Error('Conflito de horario detectado');
+        throw new Error('Conflito de horário detectado');
       }
 
-      return await this.eventRepository.updateById(id, {
-        title: updatedEvent.title,
-        description: updatedEvent.description,
+      const updateData = {
+        title: updatedEvent.title.trim(),
+        description: updatedEvent.description || null,
         startTime,
         endTime
-      });
+      };
+
+      if (data.calendarId !== undefined) {
+        if (!ObjectId.isValid(data.calendarId)) {
+          throw new Error('Campo "calendarId" é inválido');
+        }
+
+        const calendar = await this.calendarRepository.findById(data.calendarId);
+
+        if (!calendar) {
+          throw new Error('Calendário não encontrado');
+        }
+
+        updateData.calendarId = new ObjectId(data.calendarId);
+      }
+
+      return await this.eventRepository.updateById(id, updateData);
     } catch (error) {
       logError(error, 'EventService.updateEvent');
       throw error;
@@ -138,8 +160,23 @@ class EventService {
     }
   }
 
+  async getEventById(id) {
+    try {
+      return await this.eventRepository.findById(id);
+    } catch (error) {
+      logError(error, 'EventService.getEventById');
+      throw error;
+    }
+  }
+
   async deleteEvent(id) {
     try {
+      const current = await this.eventRepository.findById(id);
+
+      if (!current) {
+        throw new Error('Evento não encontrado');
+      }
+
       return await this.eventRepository.deleteById(id);
     } catch (error) {
       logError(error, 'EventService.deleteEvent');

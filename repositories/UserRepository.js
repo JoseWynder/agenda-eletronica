@@ -1,5 +1,5 @@
 const { getDB } = require('../database');
-const { ObjectId } = require('mongodb');
+const { assertObjectId } = require('../utils/objectId');
 
 class UserRepository {
   constructor() {
@@ -12,7 +12,7 @@ class UserRepository {
 
   async updateById(id, data) {
     return await this.collection.updateOne(
-      { _id: new ObjectId(id) },
+      { _id: assertObjectId(id, 'id') },
       { $set: data }
     );
   }
@@ -26,7 +26,7 @@ class UserRepository {
   }
 
   async findById(id) {
-    return await this.collection.findOne({ _id: new ObjectId(id) });
+    return await this.collection.findOne({ _id: assertObjectId(id, 'id') });
   }
 
   async deleteByEmail(email) {
@@ -34,14 +34,14 @@ class UserRepository {
   }
 
   async deleteById(id) {
-    return await this.collection.deleteOne({ _id: new ObjectId(id) });
+    return await this.collection.deleteOne({ _id: assertObjectId(id, 'id') });
   }
 
   async emailExists(email, excludeId = null) {
     const query = { email };
 
     if (excludeId) {
-      query._id = { $ne: new ObjectId(excludeId) };
+      query._id = { $ne: assertObjectId(excludeId, 'id') };
     }
 
     const user = await this.collection.findOne(query);

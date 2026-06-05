@@ -1,5 +1,5 @@
 const { getDB } = require('../database');
-const { ObjectId } = require('mongodb');
+const { assertObjectId } = require('../utils/objectId');
 
 class CalendarRepository {
   constructor() {
@@ -12,35 +12,35 @@ class CalendarRepository {
 
   async updateById(id, data) {
     return await this.collection.updateOne(
-      { _id: new ObjectId(id) },
+      { _id: assertObjectId(id, 'id') },
       { $set: data }
     );
   }
 
   async findByUserId(userId) {
     return await this.collection
-      .find({ userId: new ObjectId(userId) })
+      .find({ userId: assertObjectId(userId, 'userId') })
       .toArray();
   }
 
   async deleteById(id) {
     return await this.collection
-      .deleteOne({ _id: new ObjectId(id) });
+      .deleteOne({ _id: assertObjectId(id, 'id') });
   }
 
   async findById(id) {
     return await this.collection
-      .findOne({ _id: new ObjectId(id) });
+      .findOne({ _id: assertObjectId(id, 'id') });
   }
 
   async nameExists(name, userId, excludeId = null) {
     const query = {
       name,
-      userId: new ObjectId(userId)
+      userId: assertObjectId(userId, 'userId')
     };
 
     if (excludeId) {
-      query._id = { $ne: new ObjectId(excludeId) };
+      query._id = { $ne: assertObjectId(excludeId, 'id') };
     }
 
     const calendar = await this.collection.findOne(query);

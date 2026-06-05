@@ -9,11 +9,11 @@ class CalendarService {
 
   validate(data) {
     if (!data.name || data.name.trim() === '') {
-      throw new Error('Nome do calendário é obrigatório');
+      throw new Error('Campo "name" é obrigatório');
     }
 
     if (!data.userId) {
-      throw new Error('userId é obrigatório');
+      throw new Error('Campo "userId" é obrigatório');
     }
   }
 
@@ -22,7 +22,7 @@ class CalendarService {
       this.validate(data);
 
       if (!ObjectId.isValid(data.userId)) {
-        throw new Error('userId inválido');
+        throw new Error('Campo "userId" é inválido');
       }
 
       const user = await this.userRepository.findById(data.userId);
@@ -37,11 +37,11 @@ class CalendarService {
       );
 
       if (exists) {
-        throw new Error('Já existe um calendário com esse nome para esse usuário');
+        throw new Error('Campo "name" já cadastrado para este usuário');
       }
 
       const calendar = {
-        name: data.name,
+        name: data.name.trim(),
         userId: new ObjectId(data.userId),
         createdAt: new Date()
       };
@@ -62,28 +62,44 @@ class CalendarService {
       }
 
       if (data.name !== undefined && data.name.trim() === '') {
-        throw new Error('Nome do calendário é obrigatório');
+        throw new Error('Campo "name" é obrigatório');
       }
 
-      const userId = data.userId || current.userId;
+      const ownerId = data.userId ? data.userId.toString() : current.userId.toString();
 
-      if (data.name) {
+      if (data.name !== undefined) {
         const exists = await this.calendarRepository.nameExists(
           data.name,
-          userId,
+          ownerId,
           id
         );
 
         if (exists) {
-          throw new Error('Já existe um calendário com esse nome para esse usuário');
+          throw new Error('Campo "name" já cadastrado para este usuário');
         }
       }
 
-      if (data.userId) {
-        data.userId = new ObjectId(data.userId);
+      const updateData = {};
+
+      if (data.name !== undefined) {
+        updateData.name = data.name.trim();
       }
 
-      return await this.calendarRepository.updateById(id, data);
+      if (data.userId !== undefined) {
+        if (!ObjectId.isValid(data.userId)) {
+          throw new Error('Campo "userId" é inválido');
+        }
+
+        const user = await this.userRepository.findById(data.userId);
+
+        if (!user) {
+          throw new Error('Usuário não encontrado');
+        }
+
+        updateData.userId = new ObjectId(data.userId);
+      }
+
+      return await this.calendarRepository.updateById(id, updateData);
     } catch (error) {
       logError(error, 'CalendarService.updateCalendar');
       throw error;
@@ -99,8 +115,23 @@ class CalendarService {
     }
   }
 
+  async getCalendarById(id) {
+    try {
+      return await this.calendarRepository.findById(id);
+    } catch (error) {
+      logError(error, 'CalendarService.getCalendarById');
+      throw error;
+    }
+  }
+
   async deleteCalendar(id) {
     try {
+      const current = await this.calendarRepository.findById(id);
+
+      if (!current) {
+        throw new Error('Calendário não encontrado');
+      }
+
       return await this.calendarRepository.deleteById(id);
     } catch (error) {
       logError(error, 'CalendarService.deleteCalendar');
